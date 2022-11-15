@@ -49,6 +49,9 @@ function filesAndOrder(folderPath: string, filesToIgnore: Array<string> = []): A
 
     let navigation = [];
     for (const file of files) {
+        if (file.includes('index.md')) {
+            continue;
+        }
         let shouldSkip = false;
         for (const partialToIgnore of filesToIgnore) {
             const containsText = file.match(partialToIgnore);
@@ -98,6 +101,7 @@ function filesAndOrder(folderPath: string, filesToIgnore: Array<string> = []): A
  */
 function foldersAndOrder(folderPath: string, options: Options = {}): Array<FolderStructure> {
     let startPath: string;
+    console.log('foldersAndOrder: ', folderPath);
 
     if (!folderPath.includes(normalizePath(process.cwd()))) {
         startPath = normalizePath(path.join(process.cwd(), folderPath));
@@ -105,24 +109,48 @@ function foldersAndOrder(folderPath: string, options: Options = {}): Array<Folde
         startPath = folderPath;
     }
 
-    const folders = fs.readdirSync(startPath).filter((x) => {
-        return !x.includes('.md');
-    });
+    const folders = fs
+        .readdirSync(startPath, {
+            withFileTypes: true,
+        })
+        .filter((f) => f.isDirectory);
 
     let objects: Array<FolderStructure> = [];
     for (let folder of folders) {
-        const nextPath = normalizePath(path.join(startPath, folder));
+        const nextPath = normalizePath(path.join(startPath, folder.name));
+        const indexPath = normalizePath(path.join(nextPath, 'index.md'));
+        if (!fs.existsSync(indexPath)) {
+            continue;
+        }
+        const fileIndexData = fs.readFileSync(indexPath).toString();
+        const matterData = matter(fileIndexData);
+
+        if (typeof matterData.data.title === 'undefined') {
+            console.warn(`Missing Title Front Matter | ${indexPath}`);
+            continue;
+        }
+
         objects.push({
-            text: options.sectionName ? options.sectionName : `${capitalize(folder)}`,
-            items: filesAndOrder(nextPath, options.partialFileNamesToIgnore ? options.partialFileNamesToIgnore : []),
+            text: matterData.data.title,
+            items: [
+                ...filesAndOrder(nextPath, options.partialFileNamesToIgnore ? options.partialFileNamesToIgnore : []),
+                ...foldersAndOrder(nextPath, options),
+            ].sort((a, b) => {
+                return a.order - b.order;
+            }),
+            order: matterData.data.order || 0,
             collapsible: options.collapsible === false ? false : true, // Default to `True`
             collapsed: options.collapsed === true ? true : false, // Default to `False`
         });
 
-        objects = [...objects, ...foldersAndOrder(nextPath, options)];
+        objects = [...objects];
     }
 
-    return objects;
+    const sortedResults = objects.sort((a, b) => {
+        return a.order - b.order;
+    });
+
+    return sortedResults;
 }
 
 export const SidebarBuilder = {

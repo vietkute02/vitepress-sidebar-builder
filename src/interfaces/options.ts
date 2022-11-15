@@ -36,4 +36,6 @@ export interface Options {
      * @memberof Options
      */
     partialFileNamesToIgnore?: Array<string>;
+
+    order?: number;
 }

@@ -11,6 +11,8 @@ A very simple sidebar builder that lets the end user specify which folders to pu
 * Orders files by an `order` front-matter property.
 * Automatically uses `title` from `front-matter` property for sidebar title.
 * Ability to ignore specific files from being captured.
+* **new** recursively finds all folders and files from a given folder.
+* **new** automatically creates a sidebar for each folder.
 
 ## Installation
 
@@ -35,6 +37,19 @@ order: 0
 ---
 
 # {{ $frontmatter.title }}
+```
+
+### Setting Up Markdown Folders
+
+Create *index.md* in each folder need to add
+
+Append this to the top of *index.md* .
+
+```md
+---
+title: 'Group Page Title'
+order: 0  // order with other folders
+---
 ```
 
 ### Constructing the Sidebar

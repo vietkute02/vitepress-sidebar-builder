@@ -1,7 +1,7 @@
 import { FileStructure } from './fileStructure';
 import { Options } from './options';
 
-export interface FolderStructure extends Pick<Options, 'collapsible' | 'collapsed'> {
+export interface FolderStructure extends Pick<Options, 'collapsible' | 'collapsed' | 'order'> {
     /**
      * The name of the folder.
      *
@@ -16,5 +16,5 @@ export interface FolderStructure extends Pick<Options, 'collapsible' | 'collapse
      * @type {Array<FileStructure>}
      * @memberof FolderStructure
      */
-    items: Array<FileStructure>;
+    items: Array<FileStructure | FolderStructure>;
 }
